@@ -107,6 +107,14 @@ export default function TabsLayout() {
             ),
           }}
         />
+        <Tabs.Screen
+          name="edit-profile"
+          options={{
+            title: 'Edit Profile',
+            tabBarButton: () => null,
+            tabBarItemStyle: { display: 'none' },
+          }}
+        />
       </Tabs>
     </GestureHandlerRootView>
   );
