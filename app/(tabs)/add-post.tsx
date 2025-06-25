@@ -11,16 +11,20 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 
 export default function AddPostScreen() {
-  const [image, setImage] = useState<string | null>(null);
+  const [image, setImage] = useState<
+    string | null
+  >(null);
   const [caption, setCaption] = useState('');
 
   const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 1,
-    });
+    const result =
+      await ImagePicker.launchImageLibraryAsync({
+        mediaTypes:
+          ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 1,
+      });
 
     if (!result.canceled) {
       setImage(result.assets[0].uri);
@@ -30,7 +34,10 @@ export default function AddPostScreen() {
   const handleSave = () => {
     if (image && caption) {
       // add logic to save image here
-      console.log('Post saved:', { image, caption });
+      console.log('Post saved:', {
+        image,
+        caption,
+      });
     }
   };
 
@@ -43,7 +50,10 @@ export default function AddPostScreen() {
     <View style={styles.container}>
       <TouchableOpacity onPress={pickImage}>
         {image ? (
-          <Image source={{ uri: image }} style={styles.image} />
+          <Image
+            source={{ uri: image }}
+            style={styles.image}
+          />
         ) : (
           <View style={styles.placeholderImage}>
             <Text>Select an Image</Text>
@@ -67,7 +77,9 @@ export default function AddPostScreen() {
       </TouchableOpacity>
 
       <TouchableOpacity onPress={handleReset}>
-        <Text style={styles.resetText}>Reset</Text>
+        <Text style={styles.resetText}>
+          Reset
+        </Text>
       </TouchableOpacity>
     </View>
   );

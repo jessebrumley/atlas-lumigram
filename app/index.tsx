@@ -17,7 +17,10 @@ export default function LoginScreen() {
 
   return (
     <View style={styles.container}>
-      <Image source={require('../assets/images/logo.png')} style={styles.logo} />
+      <Image
+        source={require('../assets/images/logo.png')}
+        style={styles.logo}
+      />
 
       <Text style={styles.heading}>Login</Text>
 
@@ -38,12 +41,24 @@ export default function LoginScreen() {
         style={styles.input}
       />
 
-      <Pressable style={styles.signInButton} onPress={() => router.replace('/(tabs)/home')}>
-        <Text style={styles.signInText}>Sign in</Text>
+      <Pressable
+        style={styles.signInButton}
+        onPress={() =>
+          router.replace('/(tabs)/home')
+        }
+      >
+        <Text style={styles.signInText}>
+          Sign in
+        </Text>
       </Pressable>
 
-      <Pressable style={styles.createButton} onPress={() => router.push('/register')}>
-        <Text style={styles.createText}>Create a new account</Text>
+      <Pressable
+        style={styles.createButton}
+        onPress={() => router.push('/register')}
+      >
+        <Text style={styles.createText}>
+          Create a new account
+        </Text>
       </Pressable>
     </View>
   );

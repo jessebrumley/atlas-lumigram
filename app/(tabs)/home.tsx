@@ -40,6 +40,7 @@ export default function HomeScreen() {
   const renderItem = ({ item }: any) => {
     const tap = Gesture.Tap()
       .numberOfTaps(2)
+      .maxDistance(10)
       .onEnd(() => handleDoubleTap())
       .runOnJS(true);
 
