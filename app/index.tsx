@@ -8,6 +8,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { useState } from 'react';
+import 'react-native-gesture-handler';
 
 export default function LoginScreen() {
   const router = useRouter();
