@@ -19,6 +19,7 @@ import {
   orderBy,
 } from 'firebase/firestore';
 import { auth, db } from '../../firebaseConfig';
+import IconImage from '../../assets/images/icon.png';
 
 const screenWidth = Dimensions.get('window').width;
 const imageSize = screenWidth / 3;
@@ -38,7 +39,7 @@ export default function ProfileScreen() {
 
     if (userSnap.exists()) {
       const data = userSnap.data();
-      setUsername(data.username || 'Unnamed');
+      setUsername(data.username || '');
       setProfileImage(data.profileImageUrl || null);
     }
   };
@@ -85,7 +86,7 @@ export default function ProfileScreen() {
             source={
               profileImage
                 ? { uri: profileImage }
-                : require('../../assets/images/icon.png')
+                : IconImage
             }
             style={styles.profileImage}
           />
