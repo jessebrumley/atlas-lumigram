@@ -8,16 +8,40 @@ import {
   StyleSheet,
 } from 'react-native';
 import { useState } from 'react';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../firebaseConfig';
 
 export default function RegisterScreen() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+
+const handleRegister = async () => {
+  try {
+    await createUserWithEmailAndPassword(auth, email, password);
+    setError('');
+    router.replace('/(tabs)/home');
+  } catch (err: any) {
+    switch (err.code) {
+      case 'auth/email-already-in-use':
+        setError('Email is already registered.');
+        break;
+      case 'auth/invalid-email':
+        setError('Invalid email format.');
+        break;
+      case 'auth/weak-password':
+        setError('Password must be at least 6 characters.');
+        break;
+      default:
+        setError('Could not create account. Please try again.');
+    }
+  }
+};
 
   return (
     <View style={styles.container}>
       <Image source={require('../assets/images/logo.png')} style={styles.logo} />
-
       <Text style={styles.heading}>Register</Text>
 
       <TextInput
@@ -26,8 +50,8 @@ export default function RegisterScreen() {
         value={email}
         onChangeText={setEmail}
         style={styles.input}
+        autoCapitalize="none"
       />
-
       <TextInput
         placeholder="Password"
         placeholderTextColor="#FFFFFF"
@@ -35,9 +59,12 @@ export default function RegisterScreen() {
         onChangeText={setPassword}
         secureTextEntry
         style={styles.input}
+        autoCapitalize="none"
       />
 
-      <Pressable style={styles.createButton} onPress={() => router.replace('/(tabs)/home')}>
+      {error ? <Text style={{ color: 'red', marginBottom: 10 }}>{error}</Text> : null}
+
+      <Pressable style={styles.createButton} onPress={handleRegister}>
         <Text style={styles.createText}>Create Account</Text>
       </Pressable>
 

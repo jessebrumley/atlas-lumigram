@@ -9,19 +9,28 @@ import {
 } from 'react-native';
 import { useState } from 'react';
 import 'react-native-gesture-handler';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../firebaseConfig';
 
 export default function LoginScreen() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+
+  const handleLogin = async () => {
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      setError('');
+      router.replace('/(tabs)/home');
+    } catch (err) {
+      setError('Invalid email or password');
+    }
+  };
 
   return (
     <View style={styles.container}>
-      <Image
-        source={require('../assets/images/logo.png')}
-        style={styles.logo}
-      />
-
+      <Image source={require('../assets/images/logo.png')} style={styles.logo} />
       <Text style={styles.heading}>Login</Text>
 
       <TextInput
@@ -30,8 +39,8 @@ export default function LoginScreen() {
         value={email}
         onChangeText={setEmail}
         style={styles.input}
+        autoCapitalize="none"
       />
-
       <TextInput
         placeholder="Password"
         placeholderTextColor="#FFFFFF"
@@ -39,26 +48,17 @@ export default function LoginScreen() {
         onChangeText={setPassword}
         secureTextEntry
         style={styles.input}
+        autoCapitalize="none"
       />
 
-      <Pressable
-        style={styles.signInButton}
-        onPress={() =>
-          router.replace('/(tabs)/home')
-        }
-      >
-        <Text style={styles.signInText}>
-          Sign in
-        </Text>
+      {error ? <Text style={{ color: 'red', marginBottom: 10 }}>{error}</Text> : null}
+
+      <Pressable style={styles.signInButton} onPress={handleLogin}>
+        <Text style={styles.signInText}>Sign in</Text>
       </Pressable>
 
-      <Pressable
-        style={styles.createButton}
-        onPress={() => router.push('/register')}
-      >
-        <Text style={styles.createText}>
-          Create a new account
-        </Text>
+      <Pressable style={styles.createButton} onPress={() => router.push('/register')}>
+        <Text style={styles.createText}>Create a new account</Text>
       </Pressable>
     </View>
   );
