@@ -25,6 +25,8 @@ import {
 import { db } from '../../firebaseConfig';
 import { doc, setDoc } from 'firebase/firestore';
 import { auth } from '../../firebaseConfig';
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback } from 'react';
 
 export default function HomeScreen() {
   const [posts, setPosts] = useState<any[]>([]);
@@ -80,9 +82,11 @@ export default function HomeScreen() {
     }
   };
 
-  useEffect(() => {
+useFocusEffect(
+  useCallback(() => {
     fetchPosts(true);
-  }, []);
+  }, [])
+);
 
   const handleRefresh = async () => {
     setRefreshing(true);
