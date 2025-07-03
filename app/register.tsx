@@ -10,6 +10,8 @@ import {
 import { useState } from 'react';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebaseConfig';
+import { doc, setDoc } from 'firebase/firestore';
+import { db } from '../firebaseConfig';
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -19,15 +21,21 @@ export default function RegisterScreen() {
 
 const handleRegister = async () => {
   try {
-    await createUserWithEmailAndPassword(auth, email, password);
+    const userCred = await createUserWithEmailAndPassword(auth, email, password);
+
+    await setDoc(doc(db, 'users', userCred.user.uid), {
+      username: email.split('@')[0],
+      profileImageUrl: '',
+    });
+
     setError('');
     router.replace('/(tabs)/home');
   } catch (err: any) {
-  console.error('Registration error:', err);
-  setError('Could not create account');
-}
-
+    console.error('Registration error:', err);
+    setError('Could not create account');
+  }
 };
+
 
   return (
     <View style={styles.container}>
