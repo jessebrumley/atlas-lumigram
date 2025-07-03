@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,21 +9,67 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { FlashList } from '@shopify/flash-list';
-import { homeFeed } from '../../placeholder';
-import IconImage from '../../assets/images/icon.png';
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  doc,
+  getDoc,
+  orderBy,
+} from 'firebase/firestore';
+import { auth, db } from '../../firebaseConfig';
 
-const screenWidth =
-  Dimensions.get('window').width;
+const screenWidth = Dimensions.get('window').width;
 const imageSize = screenWidth / 3;
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const profileImage = IconImage;
-  const username = 'pink-flowers23131';
+  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [username, setUsername] = useState<string>('Loading...');
+  const [posts, setPosts] = useState<any[]>([]);
+
+  const fetchProfile = async () => {
+    const userId = auth.currentUser?.uid;
+    if (!userId) return;
+
+    const userRef = doc(db, 'users', userId);
+    const userSnap = await getDoc(userRef);
+
+    if (userSnap.exists()) {
+      const data = userSnap.data();
+      setUsername(data.username || 'Unnamed');
+      setProfileImage(data.profileImageUrl || null);
+    }
+  };
+
+  const fetchUserPosts = async () => {
+    const userId = auth.currentUser?.uid;
+    if (!userId) return;
+
+    const q = query(
+      collection(db, 'posts'),
+      where('userId', '==', userId),
+      orderBy('createdAt', 'desc')
+    );
+
+    const snapshot = await getDocs(q);
+    const userPosts = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    setPosts(userPosts);
+  };
+
+  useEffect(() => {
+    fetchProfile();
+    fetchUserPosts();
+  }, []);
 
   const renderItem = ({ item }: any) => (
     <Image
-      source={{ uri: item.image }}
+      source={{ uri: item.imageUrl }}
       style={{
         width: imageSize,
         height: imageSize,
@@ -34,23 +80,21 @@ export default function ProfileScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.profileHeader}>
-        <TouchableOpacity
-          onPress={() =>
-            router.push('/(tabs)/edit-profile')
-          }
-        >
+        <TouchableOpacity onPress={() => router.push('/(tabs)/edit-profile')}>
           <Image
-            source={profileImage}
+            source={
+              profileImage
+                ? { uri: profileImage }
+                : require('../../assets/images/icon.png')
+            }
             style={styles.profileImage}
           />
         </TouchableOpacity>
-        <Text style={styles.username}>
-          {username}
-        </Text>
+        <Text style={styles.username}>{username}</Text>
       </View>
 
       <FlashList
-        data={homeFeed}
+        data={posts}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
         numColumns={3}

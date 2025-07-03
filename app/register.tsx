@@ -23,20 +23,10 @@ const handleRegister = async () => {
     setError('');
     router.replace('/(tabs)/home');
   } catch (err: any) {
-    switch (err.code) {
-      case 'auth/email-already-in-use':
-        setError('Email is already registered.');
-        break;
-      case 'auth/invalid-email':
-        setError('Invalid email format.');
-        break;
-      case 'auth/weak-password':
-        setError('Password must be at least 6 characters.');
-        break;
-      default:
-        setError('Could not create account. Please try again.');
-    }
-  }
+  console.error('Registration error:', err);
+  setError('Could not create account');
+}
+
 };
 
   return (

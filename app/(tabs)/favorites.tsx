@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,17 +11,66 @@ import {
   GestureDetector,
   Gesture,
 } from 'react-native-gesture-handler';
-import { homeFeed } from '../../placeholder';
+import {
+  collection,
+  query,
+  where,
+  orderBy,
+  limit,
+  getDocs,
+  startAfter,
+} from 'firebase/firestore';
+import { auth, db } from '../../firebaseConfig';
 
 export default function FavoritesScreen() {
-  const [showCaptions, setShowCaptions] =
-    useState<{ [key: string]: boolean }>({});
+  const [favorites, setFavorites] = useState<any[]>([]);
+  const [lastDoc, setLastDoc] = useState<any>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [showCaptions, setShowCaptions] = useState<{ [key: string]: boolean }>({});
+
+  const fetchFavorites = async (reset = false) => {
+    const userId = auth.currentUser?.uid;
+    if (!userId) return;
+
+    try {
+      const baseQuery = query(
+        collection(db, 'favorites'),
+        where('userId', '==', userId),
+        orderBy('createdAt', 'desc'),
+        ...(reset ? [limit(5)] : [startAfter(lastDoc), limit(5)])
+      );
+
+      const snapshot = await getDocs(baseQuery);
+      const newData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      if (reset) {
+        setFavorites(newData);
+      } else {
+        setFavorites(prev => [...prev, ...newData]);
+      }
+
+      const lastVisible = snapshot.docs[snapshot.docs.length - 1];
+      setLastDoc(lastVisible || null);
+    } catch (err) {
+      console.error('Failed to fetch favorites:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchFavorites(true);
+  }, []);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchFavorites(true);
+    setRefreshing(false);
+  };
 
   const handleDoubleTap = () => {
-    Alert.alert(
-      'Double Tap',
-      'Added to favorites'
-    );
+    Alert.alert('Double Tap', 'Added to favorites');
   };
 
   const handleLongPress = (id: string) => {
@@ -49,23 +98,18 @@ export default function FavoritesScreen() {
       .onStart(() => handleLongPress(item.id))
       .runOnJS(true);
 
-    const composedGesture = Gesture.Simultaneous(
-      tap,
-      longPress
-    );
+    const composedGesture = Gesture.Simultaneous(tap, longPress);
 
     return (
       <GestureDetector gesture={composedGesture}>
         <View style={styles.itemContainer}>
           <View style={styles.imageWrapper}>
             <Image
-              source={{ uri: item.image }}
+              source={{ uri: item.imageUrl }}
               style={styles.image}
             />
             {showCaptions[item.id] && (
-              <Text style={styles.caption}>
-                {item.caption}
-              </Text>
+              <Text style={styles.caption}>{item.caption}</Text>
             )}
           </View>
         </View>
@@ -76,11 +120,14 @@ export default function FavoritesScreen() {
   return (
     <View style={styles.container}>
       <FlashList
-        data={homeFeed}
+        data={favorites}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
         estimatedItemSize={450}
         extraData={showCaptions}
+        onEndReached={() => fetchFavorites()}
+        onRefresh={handleRefresh}
+        refreshing={refreshing}
       />
     </View>
   );
