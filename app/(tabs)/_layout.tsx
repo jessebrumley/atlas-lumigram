@@ -115,6 +115,14 @@ export default function TabsLayout() {
             tabBarItemStyle: { display: 'none' },
           }}
         />
+        <Tabs.Screen
+          name="user-profile/[id]"
+          options={{
+            title: 'User Profile',
+            tabBarButton: () => null,
+            tabBarItemStyle: { display: 'none' },
+          }}
+        />
       </Tabs>
     </GestureHandlerRootView>
   );

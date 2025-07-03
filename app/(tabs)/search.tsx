@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,33 +9,29 @@ import {
   StyleSheet,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-
-const users = [
-  {
-    id: '1',
-    username: 'testuser',
-    avatar: require('../../assets/images/icon.png'),
-  },
-  {
-    id: '2',
-    username: 'ramonaflowers',
-    avatar: require('../../assets/images/icon.png'),
-  },
-  {
-    id: '3',
-    username: 'scottpilgrim',
-    avatar: require('../../assets/images/icon.png'),
-  },
-];
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '../../firebaseConfig';
 
 export default function SearchScreen() {
   const [search, setSearch] = useState('');
+  const [allUsers, setAllUsers] = useState<any[]>([]);
   const router = useRouter();
 
-  const filtered = users.filter((user) =>
-    user.username
-      .toLowerCase()
-      .includes(search.toLowerCase())
+  useEffect(() => {
+    const fetchUsers = async () => {
+      const snapshot = await getDocs(collection(db, 'users'));
+      const userList = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setAllUsers(userList);
+    };
+
+    fetchUsers();
+  }, []);
+
+  const filtered = allUsers.filter(user =>
+    user.username?.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -53,15 +49,17 @@ export default function SearchScreen() {
         renderItem={({ item }) => (
           <TouchableOpacity
             style={styles.result}
-            onPress={() => {}}
+            onPress={() => router.push(`/user-profile/${item.id}`)}
           >
             <Image
-              source={item.avatar}
+              source={
+                item.profileImageUrl
+                  ? { uri: item.profileImageUrl }
+                  : require('../../assets/images/icon.png')
+              }
               style={styles.avatar}
             />
-            <Text style={styles.username}>
-              {item.username}
-            </Text>
+            <Text style={styles.username}>{item.username}</Text>
           </TouchableOpacity>
         )}
       />

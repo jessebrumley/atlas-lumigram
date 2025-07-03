@@ -1,4 +1,7 @@
-import React, { useState, useCallback } from 'react';
+import React, {
+  useEffect,
+  useState,
+} from 'react';
 import {
   View,
   Text,
@@ -6,51 +9,63 @@ import {
   TouchableOpacity,
   StyleSheet,
   Dimensions,
-  RefreshControl,
 } from 'react-native';
-import { useRouter } from 'expo-router';
-import { useFocusEffect } from '@react-navigation/native';
+import {
+  useLocalSearchParams,
+  useRouter,
+} from 'expo-router';
 import { FlashList } from '@shopify/flash-list';
 import {
+  doc,
+  getDoc,
   collection,
   query,
   where,
   getDocs,
-  doc,
-  getDoc,
   orderBy,
 } from 'firebase/firestore';
-import { auth, db } from '../../firebaseConfig';
-import IconImage from '../../assets/images/icon.png';
+import {
+  auth,
+  db,
+} from '../../../firebaseConfig';
+import IconImage from '../../../assets/images/icon.png';
 
-const screenWidth = Dimensions.get('window').width;
+const screenWidth =
+  Dimensions.get('window').width;
 const imageSize = screenWidth / 3;
 
-export default function ProfileScreen() {
+export default function UserProfileScreen() {
+  const { id } = useLocalSearchParams();
+  const userId = Array.isArray(id) ? id[0] : id;
   const router = useRouter();
-  const [profileImage, setProfileImage] = useState<string | null>(null);
-  const [username, setUsername] = useState<string>('Loading...');
+
+  const [profileImage, setProfileImage] =
+    useState<string | null>(null);
+  const [username, setUsername] =
+    useState('Loading...');
   const [posts, setPosts] = useState<any[]>([]);
-  const [refreshing, setRefreshing] = useState(false);
 
-  const fetchProfile = async () => {
-    const userId = auth.currentUser?.uid;
-    if (!userId) return;
+  const isCurrentUser =
+    auth.currentUser?.uid === userId;
 
-    const userRef = doc(db, 'users', userId);
+  const fetchUserData = async () => {
+    const userRef = doc(
+      db,
+      'users',
+      userId as string
+    );
     const userSnap = await getDoc(userRef);
 
     if (userSnap.exists()) {
       const data = userSnap.data();
       setUsername(data.username || '');
-      setProfileImage(data.profileImageUrl || null);
+      setProfileImage(
+        data.profileImageUrl || null
+      );
     }
   };
 
   const fetchUserPosts = async () => {
-    const userId = auth.currentUser?.uid;
-    if (!userId) return;
-
     const q = query(
       collection(db, 'posts'),
       where('userId', '==', userId),
@@ -58,27 +73,20 @@ export default function ProfileScreen() {
     );
 
     const snapshot = await getDocs(q);
-    const userPosts = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+    const userPosts = snapshot.docs.map(
+      (doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })
+    );
 
     setPosts(userPosts);
-    console.log('🔥 Profile posts:', userPosts);
   };
 
-  const refreshAll = async () => {
-    setRefreshing(true);
-    await fetchProfile();
-    await fetchUserPosts();
-    setRefreshing(false);
-  };
-
-  useFocusEffect(
-    useCallback(() => {
-      refreshAll();
-    }, [])
-  );
+  useEffect(() => {
+    fetchUserData();
+    fetchUserPosts();
+  }, [userId]);
 
   const renderItem = ({ item }: any) => (
     <Image
@@ -93,7 +101,13 @@ export default function ProfileScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.profileHeader}>
-        <TouchableOpacity onPress={() => router.push('/(tabs)/edit-profile')}>
+        <TouchableOpacity
+          disabled={!isCurrentUser}
+          onPress={() => {
+            if (isCurrentUser)
+              router.push('/(tabs)/edit-profile');
+          }}
+        >
           <Image
             source={
               profileImage
@@ -103,7 +117,9 @@ export default function ProfileScreen() {
             style={styles.profileImage}
           />
         </TouchableOpacity>
-        <Text style={styles.username}>{username}</Text>
+        <Text style={styles.username}>
+          {username}
+        </Text>
       </View>
 
       <FlashList
@@ -112,13 +128,6 @@ export default function ProfileScreen() {
         keyExtractor={(item) => item.id}
         numColumns={3}
         estimatedItemSize={imageSize}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={refreshAll}
-            tintColor="#1DD2AF"
-          />
-        }
       />
     </View>
   );
